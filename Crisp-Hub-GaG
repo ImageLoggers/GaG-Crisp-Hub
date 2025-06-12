@@ -1,0 +1,117 @@
+if game.PlaceId == 126884695634066 then
+    local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+    local Window = Rayfield:CreateWindow({
+        Name = "Crisp Hub💧",
+        LoadingTitle = "Crisp Hub💧",
+        LoadingSubtitle = "By James Michael",
+        ConfigurationSaving = {
+            Enabled = false,
+        }
+    })
+
+Rayfield:Notify({
+   Title = "Crisp Hub💧",
+   Content = "Thank You For Using Crisp Hub💧 Credits: James Michael",
+   Duration = 10,
+   Image = nil,
+})
+
+    local MainTab = Window:CreateTab("Dupe", nil)
+    local Label = MainTab:CreateLabel("Welcome To The Crisp Hub", nil, Color3.fromRGB(255, 255, 255), false) -- Title, Icon, Color, IgnoreTheme
+    local Paragraph = MainTab:CreateParagraph({Title = "Credits", Content = "James Michael"})
+    local MainSection = MainTab:CreateSection("Dupe")
+
+    local Button = MainTab:CreateButton({
+        Name = "Dupe Pet|Fruit",
+        Callback = function()
+            local player = game.Players.LocalPlayer
+            local character = player.Character or player.CharacterAdded:Wait()
+            
+            local tool = character:FindFirstChildOfClass("Tool")
+            if not tool then
+                Rayfield:Notify({
+                    Title = "Dupe Failed",
+                    Content = "Hold an item to duplicate it!",
+                    Duration = 5,
+                })
+                return
+            end
+            
+            local success, err = pcall(function()
+                -- 1. First try the official game remote if it exists
+                local remotes = {
+                    "PetDuplicationRemote",
+                    "DuplicatePet",
+                    "ReplicateTool",
+                    "ItemDupeRemote"
+                }
+                
+                for _, remoteName in pairs(remotes) do
+                    local remote = game:GetService("ReplicatedStorage"):FindFirstChild(remoteName) or 
+                                 game:GetService("Workspace"):FindFirstChild(remoteName)
+                    if remote then
+                        remote:FireServer(tool.Name)
+                        return true
+                    end
+                end
+                
+                -- 2. Advanced cloning with animation support
+                local clone = tool:Clone()
+                
+                -- Check for animations in multiple locations
+                local animationLocations = {
+                    game:GetService("ServerStorage"),
+                    game:GetService("Workspace"),
+                    game:GetService("ReplicatedStorage"),
+                    game:GetService("ReplicatedFirst")
+                }
+                
+                -- Handle animator if exists
+                local animator = tool:FindFirstChildOfClass("Animator")
+                if animator then
+                    local cloneAnimator = clone:FindFirstChildOfClass("Animator") or Instance.new("Animator", clone)
+                    
+                    for _, track in pairs(animator:GetPlayingAnimationTracks()) do
+                        local animId = track.Animation.AnimationId
+                        
+                        -- Search all possible animation locations
+                        for _, location in pairs(animationLocations) do
+                            local anim = location:FindFirstChild(animId)
+                            if anim then
+                                local newTrack = cloneAnimator:LoadAnimation(anim)
+                                newTrack:Play()
+                                newTrack:AdjustSpeed(track.Speed)
+                                break
+                            end
+                        end
+                    end
+                end
+                
+                -- Final parenting with fallbacks
+                clone.Parent = player.Backpack
+                if not clone:IsDescendantOf(player) then
+                    clone.Parent = player.StarterGear
+                    task.wait(0.1)
+                    clone.Parent = player.Backpack
+                end
+                
+                return true
+            end)
+            
+            if success then
+                Rayfield:Notify({
+                    Title = "Success!",
+                    Content = tool.Name.." duplicated!",
+                    Duration = 5,
+                })
+            else
+                Rayfield:Notify({
+                    Title = "Error",
+                    Content = "Failed: "..tostring(err),
+                    Duration = 5,
+                })
+            end
+        end,
+    })
+end
